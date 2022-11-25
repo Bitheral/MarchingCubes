@@ -1,0 +1,19 @@
+{
+  "name": "marchingcubes",
+  "description": "A node.js project",
+  "version": "0.0.1",
+  "author": "Bitheral <me@bitheral.net>",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "three": "^0.146.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.3"
+  }
+}
