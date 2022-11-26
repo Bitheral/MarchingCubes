@@ -3,4 +3,11 @@ import Cube from "./MarchingCubes/Cube";
 
 import Noise from "./noise";
 
-export default { MarchingCubes: { Volume, Cube }, Noise }
+const Algorithm = {
+    Volume,
+    Cube,
+};
+
+export { Algorithm, Noise };
+
+export default { Algorithm, Noise };

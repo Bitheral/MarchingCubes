@@ -203,9 +203,9 @@ export function simplex2(offset: Vector2): number {
 export function simplex3(offset: Vector3) {
     var n0, n1, n2, n3; // Noise contributions from the four corners
 
-    const xin = offset.x;
-    const yin = offset.y;
-    const zin = offset.z;
+    let xin = offset.x;
+    let yin = offset.y;
+    let zin = offset.z;
 
     // Skew the input space to determine which simplex cell we're in
     var s = (xin+yin+zin)*F3; // Hairy factor for 2D
