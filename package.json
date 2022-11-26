@@ -1,16 +1,16 @@
 {
   "name": "marchingcubes",
-  "description": "A node.js project",
-  "version": "0.0.1",
+  "description": "Marching Cubes Algorithm for Three.js",
+  "version": "0.1.0",
   "author": "Bitheral <me@bitheral.net>",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "npm run build",
     "build": "tsc"
   },
   "dependencies": {
+    "@types/three": "^0.146.0",
     "three": "^0.146.0"
   },
   "devDependencies": {
