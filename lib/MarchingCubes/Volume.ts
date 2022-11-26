@@ -4,7 +4,7 @@ import noise from "../noise";
 
 export class Volume {
     private size: number;
-    private cubeGrid: Cube[][][] = [];
+    private cubeGrid: Cube[] = [];
     private position: Vector3;
 
     private isoLevel: number = 0.5;
@@ -19,7 +19,9 @@ export class Volume {
         for(let z = 0; z < this.size; z++) {
             for(let y = 0; y < this.size; y++) {
                 for(let x = 0; x < this.size; x++) {
-                    this.cubeGrid[x][y][z] = new Cube(this, new Vector3(x, y, z));
+                    const index = x + y * this.size + z * this.size * this.size;
+                    let cube = new Cube(this, new Vector3(x, y, z));
+                    this.cubeGrid[index] = cube;
                 }
             }
         }
@@ -30,8 +32,12 @@ export class Volume {
         for(let z = 0; z < this.size - 1; z++) {
             for(let y = 0; y < this.size - 1; y++) {
                 for(let x = 0; x < this.size - 1; x++) {
+                    
+                    // Get the index
+                    const index = x + y * this.size + z * this.size * this.size;
+
                     // Get the cube
-                    let cube = this.cubeGrid[x][y][z];
+                    let cube = this.cubeGrid[index];
                     // Build the mesh
                     cube.buildMesh();
 
