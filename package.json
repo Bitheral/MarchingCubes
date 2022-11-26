@@ -1,7 +1,7 @@
 {
   "name": "@bitheral/marching-cubes",
   "description": "Marching Cubes Algorithm for Three.js",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "Bitheral <me@bitheral.net>",
   "license": "MIT",
   "main": "dist/index.js",
