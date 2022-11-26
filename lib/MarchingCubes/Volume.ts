@@ -1,6 +1,6 @@
 import Cube from "./Cube"
 import { Vector3, BoxGeometry, Mesh, MeshBasicMaterial } from "three"
-import noise from "../noise";
+import { createNoise3D, createNoise2D } from "simplex-noise";
 
 export class Volume {
     private size: number;
@@ -8,6 +8,11 @@ export class Volume {
     private position: Vector3;
 
     private isoLevel: number = 0.5;
+
+    public noise: any = {
+        "2D": createNoise2D(),
+        "3D": createNoise3D(),
+    }
 
     constructor(size: number, position: Vector3) {
         this.size = size;

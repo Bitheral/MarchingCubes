@@ -1,8 +1,9 @@
 import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute } from "three";
-import Noise from "../noise";
 import Volume from "./Volume";
-import { VertexLerp } from "./util";
+import { VertexInterp } from "./util";
 import { edgeTable, triTable} from "./lookup.json"
+
+import { createNoise3D } from "simplex-noise";
 
 export class Cube {
     private position: Vector3 = new Vector3;
@@ -18,16 +19,16 @@ export class Cube {
         new Vector3(0, 1, 1)
     ]
 
-    private positionInGrid: Vector3 = new Vector3;
-    private positionInWorld: Vector3 = new Vector3;
-
     private corners: Vector4[] = [];
 
     private volume: Volume;
     private geometry: BufferGeometry;
 
+    private noise: any;
+
     constructor(volume: Volume, position: Vector3) {
         this.volume = volume;
+        this.noise = volume.noise;
         this.geometry = new BufferGeometry();
         this.updatePosition(position);
         this.generateValues();
@@ -35,78 +36,75 @@ export class Cube {
 
     private generateValues(): void {
         this.corners = new Array(8);
-        this.updatePosition(this.positionInGrid);
+        for(let i = 0; i < 8; i++) {
+            let corner = Cube.cornersIndex[i].clone().add(this.position);
+
+            let value = this.noise["3D"](corner.x, corner.y, corner.z);
+            this.corners[i] = new Vector4(corner.x, corner.y, corner.z, value);
+        }
     }
 
     private updatePosition(position: Vector3): void {
-        this.positionInGrid = position;
-        this.positionInWorld = this.volume.getPosition().add(position);
-        for(let i = 0; i < this.corners.length; i++) {
-            let cornerPos = this.positionInWorld.clone().add(Cube.cornersIndex[i]);
-            this.corners[i] = new Vector4(cornerPos.x, cornerPos.y, cornerPos.z, Math.random());
-        }
+        this.position = position;
     }
 
     public buildMesh(): void {
-        // Vertices array where the size is 12
-        let vertices: Vector3[] = new Array(12);
         
-        // Triangles array is of size 3, where each element is a vertex index
-        let triangles: number[] = [];
+        /*
+            Determine the index into the edge table which
+            tells us which vertices are inside of the surface
+            */
+        let cubeindex:number = 0;
+        let vertlist:Vector3[] = new Array(12);
 
-        let tableIndex = 0;
-        for(let i = 0; i < this.corners.length; i++) {
+        for(let i = 0; i < 8; i++) {
             if(this.corners[i].w < this.volume.getIsoLevel()) {
-                tableIndex |= 1 << i;
+                cubeindex |= 1 << i;
             }
         }
 
-        if(edgeTable[tableIndex] === 0) {
+        /* Cube is entirely in/out of the surface */
+        if (edgeTable[cubeindex] == 0)
             return;
+
+        /* Find the vertices where the surface intersects the cube */
+        if (edgeTable[cubeindex] & 1)
+            vertlist[0] = VertexInterp(this.volume.getIsoLevel(), this.corners[0], this.corners[1]);
+        if (edgeTable[cubeindex] & 2)
+            vertlist[1] = VertexInterp(this.volume.getIsoLevel(), this.corners[1], this.corners[2]);
+        if (edgeTable[cubeindex] & 4)
+            vertlist[2] = VertexInterp(this.volume.getIsoLevel(), this.corners[2], this.corners[3]);
+        if (edgeTable[cubeindex] & 8)
+            vertlist[3] = VertexInterp(this.volume.getIsoLevel(), this.corners[3], this.corners[0]);
+        if (edgeTable[cubeindex] & 16)
+            vertlist[4] = VertexInterp(this.volume.getIsoLevel(), this.corners[4], this.corners[5]);
+        if (edgeTable[cubeindex] & 32)
+            vertlist[5] = VertexInterp(this.volume.getIsoLevel(), this.corners[5], this.corners[6]);
+        if (edgeTable[cubeindex] & 64)
+            vertlist[6] = VertexInterp(this.volume.getIsoLevel(), this.corners[6], this.corners[7]);
+        if (edgeTable[cubeindex] & 128)
+            vertlist[7] = VertexInterp(this.volume.getIsoLevel(), this.corners[7], this.corners[4]);
+        if (edgeTable[cubeindex] & 256)
+            vertlist[8] = VertexInterp(this.volume.getIsoLevel(), this.corners[0], this.corners[4]);
+        if (edgeTable[cubeindex] & 512)
+            vertlist[9] = VertexInterp(this.volume.getIsoLevel(), this.corners[1], this.corners[5]);
+        if (edgeTable[cubeindex] & 1024)
+            vertlist[10] = VertexInterp(this.volume.getIsoLevel(), this.corners[2], this.corners[6]);
+        if (edgeTable[cubeindex] & 2048)
+            vertlist[11] = VertexInterp(this.volume.getIsoLevel(), this.corners[3], this.corners[7]);
+
+        // Convert the vertex list to a float32 array
+        let vertices: number[] = [];
+        for(let i = 0; i < vertlist.length; i++) {
+            if(vertlist[i] != undefined) {
+                vertices.push(vertlist[i].x, vertlist[i].y, vertlist[i].z);
+            }
         }
 
-        if (edgeTable[tableIndex] & 1)
-            vertices[0] = VertexLerp(this.volume.getIsoLevel(), this.corners[0], this.corners[1]);
-        if (edgeTable[tableIndex] & 2)
-            vertices[1] = VertexLerp(this.volume.getIsoLevel(), this.corners[1], this.corners[2]);
-        if (edgeTable[tableIndex] & 4)
-            vertices[2] = VertexLerp(this.volume.getIsoLevel(), this.corners[2], this.corners[3]);
-        if (edgeTable[tableIndex] & 8)
-            vertices[3] = VertexLerp(this.volume.getIsoLevel(), this.corners[3], this.corners[0]);
-        if (edgeTable[tableIndex] & 16)
-            vertices[4] = VertexLerp(this.volume.getIsoLevel(), this.corners[4], this.corners[5]);
-        if (edgeTable[tableIndex] & 32)
-            vertices[5] = VertexLerp(this.volume.getIsoLevel(), this.corners[5], this.corners[6]);
-        if (edgeTable[tableIndex] & 64)
-            vertices[6] = VertexLerp(this.volume.getIsoLevel(), this.corners[6], this.corners[7]);
-        if (edgeTable[tableIndex] & 128)
-            vertices[7] = VertexLerp(this.volume.getIsoLevel(), this.corners[7], this.corners[4]);
-        if (edgeTable[tableIndex] & 256)
-            vertices[8] = VertexLerp(this.volume.getIsoLevel(), this.corners[0], this.corners[4]);
-        if (edgeTable[tableIndex] & 512)
-            vertices[9] = VertexLerp(this.volume.getIsoLevel(), this.corners[1], this.corners[5]);  
-        if (edgeTable[tableIndex] & 1024)
-            vertices[10] = VertexLerp(this.volume.getIsoLevel(), this.corners[2], this.corners[6]);
-        if (edgeTable[tableIndex] & 2048)
-            vertices[11] = VertexLerp(this.volume.getIsoLevel(), this.corners[3], this.corners[7]);
+        // Create the geometry
+        this.geometry = new BufferGeometry();
+        this.geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
         
-        let nTriangles = 0;
-        for(let i = 0; triTable[tableIndex][i] != -1; i+=3) {
-            triangles.push(triTable[tableIndex][i]);
-            triangles.push(triTable[tableIndex][i+1]);
-            triangles.push(triTable[tableIndex][i+2]);
-            nTriangles++;
-        }
-
-        // Convert the vertices to a Float32Array
-        let verticesArray = new Float32Array(vertices.length * 3);
-        for(let i = 0; i < vertices.length; i++) {
-            verticesArray[i * 3] = vertices[i].x;
-            verticesArray[i * 3 + 1] = vertices[i].y;
-            verticesArray[i * 3 + 2] = vertices[i].z;
-        }
-
-        this.geometry.setAttribute("position", new Float32BufferAttribute(verticesArray, 3));
     }
 
     public getGeometry(): BufferGeometry {
