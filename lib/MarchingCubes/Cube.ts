@@ -1,14 +1,19 @@
-import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute } from "three";
+import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute, Float16BufferAttribute, Uint16BufferAttribute } from "three";
 import Volume from "./Volume";
 import { VertexInterp } from "./util";
 import { edgeTable, triTable, cornerIndexFromEdge} from "./lookup.json"
 
 import { createNoise3D } from "simplex-noise";
 
+export interface MeshData {
+    vertices: number[];
+    normals: number[];
+}
+
 export class Cube {
     private position: Vector3 = new Vector3;
 
-    private static cornersIndex: Vector3[] = [
+    public static cornersIndex: Vector3[] = [
         new Vector3(0, 0, 0),
         new Vector3(1, 0, 0),
         new Vector3(1, 0, 1),
@@ -19,7 +24,8 @@ export class Cube {
         new Vector3(0, 1, 1)
     ]
 
-    private corners: Vector4[] = [];
+    public corners: Vector4[] = [];
+    public cornerDensity: number[] = [];
 
     private volume: Volume;
     private geometry: BufferGeometry;
@@ -36,6 +42,8 @@ export class Cube {
 
     private generateValues(): void {
         this.corners = new Array(8);
+        this.cornerDensity = new Array(8);
+        this.noise = this.volume.noise;
         // for(let i = 0; i < Cube.cornersIndex.length; i++) {
         //     let corner = Cube.cornersIndex[i].clone().add(this.position);
 
@@ -47,13 +55,25 @@ export class Cube {
             let cornerPos = corner.clone();
             cornerPos.add(this.position);
 
-            let xCoord = (cornerPos.x / this.volume.getScale()) * this.volume.getNoiseScale();
-            let yCoord = (cornerPos.y / this.volume.getScale()) * this.volume.getNoiseScale();
-            let zCoord = (cornerPos.z / this.volume.getScale()) * this.volume.getNoiseScale();
+            let xCoord = (cornerPos.x / this.volume.getScale()) * this.volume.getNoiseScale() + this.volume.getNoiseOffset().x;
+            let yCoord = (cornerPos.y / this.volume.getScale()) * this.volume.getNoiseScale() + this.volume.getNoiseOffset().y;
+            let zCoord = (cornerPos.z / this.volume.getScale()) * this.volume.getNoiseScale() + this.volume.getNoiseOffset().z;
 
+            // Offset the noise to the center of the volume
+            xCoord -= this.volume.getScale() / 2;
+            yCoord -= this.volume.getScale() / 2;
+            zCoord -= this.volume.getScale() / 2;
+                    
+            let density = this.noise["3D"](xCoord, yCoord, zCoord)
+            
+            const heightBias = (cornerPos.y / this.volume.getScale());
+            density -= heightBias * (cornerPos.y / this.volume.yBias); 
 
-            let value = this.noise["3D"](xCoord, yCoord, zCoord);
-            this.corners[i] = new Vector4(corner.x, corner.y, corner.z, value);
+            // Invert the density
+            density = 1 - density;
+            
+            this.corners[i] = new Vector4(cornerPos.x, cornerPos.y, cornerPos.z, density);
+            this.cornerDensity[i] = density;
         });
     }
 
@@ -61,13 +81,33 @@ export class Cube {
         this.position = position;
     }
 
-    public buildMesh(): BufferGeometry {
+    public buildMesh(updateValues: boolean = false): BufferGeometry {
         
         let cubeindex:number = 0;
         let vertlist:Vector3[] = []
 
+        if(updateValues) {
+            this.generateValues();
+        }
+
         for(let i = 0; i < 8; i++) {
-            if(this.corners[i].w < this.volume.getIsoLevel()) {
+            const corner = this.corners[i];
+
+            // If the corner at at the top of the volume,
+            // the corner.w will be 1, otherwise it will be 0
+            
+            const cornerIsAtTop = (corner.y >= this.volume.getScale() - 1);
+            const cornerIsAtBottom = corner.y <= 0;
+            const cornerIsAtRight = corner.x >= this.volume.getScale() - 1;
+            const cornerIsAtLeft = corner.x <= 0;
+            const cornerIsAtFront = corner.z >= this.volume.getScale() - 1;
+            const cornerIsAtBack = corner.z <= 0;
+
+            if((cornerIsAtTop || cornerIsAtBottom || cornerIsAtRight || cornerIsAtLeft || cornerIsAtFront || cornerIsAtBack)) {
+                corner.w = (this.volume.showEdges) ? this.volume.edgeSharpness : this.cornerDensity[i];
+            }
+            
+            if(corner.w <= this.volume.getDensityThreshold()) {
                 cubeindex |= 1 << i;
             }
         }
@@ -86,7 +126,7 @@ export class Cube {
             let cornerA = this.corners[indexA];
             let cornerB = this.corners[indexB];
 
-            let vert = VertexInterp(this.volume.getIsoLevel(), cornerA, cornerB);
+            let vert = VertexInterp(this.volume.getDensityThreshold(), cornerA, cornerB);
 
             vertlist.push(vert);
        });
@@ -105,14 +145,8 @@ export class Cube {
         return this.geometry;
     }
 
-    public getGeometry(): BufferGeometry {
-        return this.geometry;
-    }
-
-    public getPosition(): Vector3 {
-        return this.position;
-    }
-
 }
+
+export type CubeType = Cube;
 
 export default Cube;
