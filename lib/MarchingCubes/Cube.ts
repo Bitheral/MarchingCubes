@@ -64,13 +64,13 @@ export class Cube {
             yCoord -= this.volume.getScale() / 2;
             zCoord -= this.volume.getScale() / 2;
                     
-            let density = this.noise["3D"](xCoord, yCoord, zCoord)
+            let noiseValue = this.noise.perlin["3D"](xCoord, yCoord, zCoord);
             
             const heightBias = (cornerPos.y / this.volume.getScale());
-            density -= heightBias * (cornerPos.y / this.volume.yBias); 
+            const density = heightBias * (cornerPos.y / this.volume.yBias) - noiseValue; 
 
             // Invert the density
-            density = 1 - density;
+            //density = 1 - density;
             
             this.corners[i] = new Vector4(cornerPos.x, cornerPos.y, cornerPos.z, density);
             this.cornerDensity[i] = density;
@@ -92,16 +92,17 @@ export class Cube {
 
         for(let i = 0; i < 8; i++) {
             const corner = this.corners[i];
+            
 
             // If the corner at at the top of the volume,
             // the corner.w will be 1, otherwise it will be 0
             
-            const cornerIsAtTop = (corner.y >= this.volume.getScale() - 1);
-            const cornerIsAtBottom = corner.y <= 0;
-            const cornerIsAtRight = corner.x >= this.volume.getScale() - 1;
-            const cornerIsAtLeft = corner.x <= 0;
-            const cornerIsAtFront = corner.z >= this.volume.getScale() - 1;
-            const cornerIsAtBack = corner.z <= 0;
+            const cornerIsAtTop = corner.y == this.volume.getScale() - 1;
+            const cornerIsAtBottom = corner.y == 0;
+            const cornerIsAtRight = corner.x == this.volume.getScale() - 1;
+            const cornerIsAtLeft = corner.x == 0;
+            const cornerIsAtFront = corner.z == this.volume.getScale() - 1;
+            const cornerIsAtBack = corner.z == 0;
 
             if((cornerIsAtTop || cornerIsAtBottom || cornerIsAtRight || cornerIsAtLeft || cornerIsAtFront || cornerIsAtBack)) {
                 corner.w = (this.volume.showEdges) ? this.volume.edgeSharpness : this.cornerDensity[i];

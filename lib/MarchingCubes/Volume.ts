@@ -1,6 +1,7 @@
 import Cube, { MeshData } from "./Cube"
 import { Vector3, BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial, BoxGeometry } from "three"
-// import { createNoise3D, createNoise2D } from "simplex-noise";
+import { createNoise3D, createNoise2D } from "simplex-noise";
+import alea from "alea";
 
 import { seed, perlin2, perlin3 } from "perlin.js"
 
@@ -20,24 +21,46 @@ export class Volume {
     public noiseOffset: Vector3 = new Vector3(0,0,0);
     
     public noiseScale: number = 4;
-    public densityThreshold: number = 0.5;
+    public densityThreshold: number = 1;
     public yBias: number = 0;
 
     public gridWireframe: boolean = false;
     public wireFrame: boolean = false;
 
     public seed: number = 0;
-    public noiseSeed = seed(this.seed);
+    public noiseSeed: number = 0;
+    public pNoiseSeed = Volume.createSeed(this.seed);
+
+    public ySize: number = 0;
 
     public noise: any = {
-        "2D": perlin2,
-        "3D": perlin3,
+        perlin: {
+            "2D": perlin2,
+            "3D": perlin3,
+        },
+        simplex: {
+            "2D": createNoise2D(),
+            "3D": createNoise3D(),
+        }
+    }
+
+    public static createSeed(_seed: number) {
+        return seed(_seed);
     }
 
     constructor(size: number, position: Vector3) {
         this.size = size;
-        this.position = position;
-        this.yBias = this.size / 2;
+        this.ySize = 8;
+
+        this.seed = Date.now();
+        this.pNoiseSeed = seed(this.seed);
+        
+        // If the position is not zero, divide it by the size of the volume
+        // This is to make sure that the volume is centered around the position
+        this.position = position.clone().divideScalar(size);
+        this.noiseOffset = this.position.clone();
+
+        this.yBias = this.ySize;
         this.generateGrid();
     }
 
@@ -47,11 +70,13 @@ export class Volume {
         for(let z = 0; z < this.size; z++) {
             for(let y = 0; y < this.size; y++) {
                 for(let x = 0; x < this.size; x++) {
+                    // Get the index
                     const index = x + y * this.size + z * this.size * this.size;
+
+
                     // When setting the cube position, we need to take into account the position of the volume
 
                     const cubePosition = new Vector3(x, y, z);
-                    cubePosition.add(this.position);
 
                     this.cubeGrid[index] = new Cube(this, cubePosition);
                     boxGeos[index] = new BoxGeometry(1, 1, 1);
@@ -87,6 +112,9 @@ export class Volume {
     public March(updateValues: boolean = false): BufferGeometry[] {
         this.noiseSeed = seed(this.seed);
         let cubeGeometries: BufferGeometry[] = [];
+
+        this.cubeGrid = [];
+        this.generateGrid();
 
         // For each cube in the grid
         for(let z = 0; z < this.size - 1; z++) {

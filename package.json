@@ -13,7 +13,6 @@
   "dependencies": {
     "@types/three": "^0.144.0",
     "alea": "^1.0.1",
-    "fastnoisejs": "^1.0.1",
     "perlin.js": "^1.0.0",
     "simplex-noise": "^4.0.1",
     "three": "^0.145.0"
