@@ -1,5 +1,5 @@
-import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute, Float16BufferAttribute, Uint16BufferAttribute } from "three";
-import Volume from "./Volume";
+import { Vector2, Vector3, Vector4, BufferGeometry, Float32BufferAttribute } from "three";
+import { Volume, VolumeNew} from "./Volume";
 import { VertexInterp } from "./util";
 import { edgeTable, triTable, cornerIndexFromEdge} from "./lookup.json"
 
@@ -85,6 +85,7 @@ export class Cube {
         
         let cubeindex:number = 0;
         let vertlist:Vector3[] = []
+        let uvlist:Vector2[] = [];
 
         if(updateValues) {
             this.generateValues();
@@ -130,17 +131,28 @@ export class Cube {
             let vert = VertexInterp(this.volume.getDensityThreshold(), cornerA, cornerB);
 
             vertlist.push(vert);
+
+            // Create UV  from vert
+            let uvVert = vert.clone().divideScalar(this.volume.getScale())
+            uvlist.push(new Vector2(uvVert.x, uvVert.z));
+
        });
 
         // Convert the vertex list to a float32 array
         let vertices: number[] = new Array(vertlist.length * 3);
+        let uvs: number[] = new Array(uvlist.length * 2);
         for(let i = 0; i < vertlist.length; i++) {
             vertices.push(vertlist[i].x, vertlist[i].y, vertlist[i].z);
+        }
+
+        for(let i = 0; i < uvlist.length; i++) {
+            uvs.push(uvlist[i].x, uvlist[i].y);
         }
 
         // Create the geometry
         this.geometry = new BufferGeometry();
         this.geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+        this.geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
         this.geometry.computeVertexNormals();
 
         return this.geometry;

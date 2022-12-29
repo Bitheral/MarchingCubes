@@ -1,8 +1,9 @@
-import Volume from "./MarchingCubes/Volume";
+import {Volume, VolumeNew} from "./MarchingCubes/Volume";
 import Cube from "./MarchingCubes/Cube";
 
 export const Algorithm = {
     Volume,
+    VolumeNew,
     Cube,
 };
 
