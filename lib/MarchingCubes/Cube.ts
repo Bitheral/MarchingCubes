@@ -1,6 +1,6 @@
 import { Vector2, Vector3, Vector4, BufferGeometry, Float32BufferAttribute } from "three";
 import { Volume, VolumeNew} from "./Volume";
-import { VertexInterp } from "./util";
+import { VertexInterp3 } from "./util";
 import { edgeTable, triTable, cornerIndexFromEdge} from "./lookup.json"
 
 import { createNoise3D } from "simplex-noise";
@@ -128,7 +128,7 @@ export class Cube {
             let cornerA = this.corners[indexA];
             let cornerB = this.corners[indexB];
 
-            let vert = VertexInterp(this.volume.getDensityThreshold(), cornerA, cornerB);
+            let vert = VertexInterp3(this.volume.getDensityThreshold(), cornerA, cornerB);
 
             vertlist.push(vert);
 
