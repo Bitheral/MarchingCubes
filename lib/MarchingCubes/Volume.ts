@@ -383,7 +383,7 @@ export class VolumeNew {
                             cPosition.divideScalar(this.getScale());
 
                             const volumePosition = this.position.clone().multiplyScalar(config.scale);
-                            let newNoise = this.customNoise.generate3D(
+                            let newNoise = this.customNoise.generate3DFBM(
                                 cPosition,
                                 config,
                                 volumePosition

@@ -31,6 +31,7 @@ export class Noise {
     }
 
     public seed = 0;
+    private noiseType =  "perlin";
 
     constructor(_seed: number) {
         this.seed = Noise.createSeed(_seed);
@@ -40,8 +41,35 @@ export class Noise {
         return seed(_seed);
     }
 
-    public generate3D(position: Vector3, noiseData: NoiseData, offset: Vector3): number {
-        let noise = this.noise.perlin["3D"];
+    public setType(type: string) {
+        switch(type) {
+            case "perlin":
+            case "simplex":
+                this.noiseType = type;
+                break;
+            default:
+                console.error("Noise type not found");
+                console.warn("Defaulting to perlin noise");
+                this.noiseType = "perlin";
+                break;
+        }
+    }
+
+    public generate3D(position: Vector3, noiseData: NoiseData): number {
+        let noise = this.noise[this.noiseType]["3D"];
+
+        if(noiseData.scale <= 0) {
+            noiseData.scale = 0.0001;
+        }
+        
+        let coord = position.clone().multiplyScalar(noiseData.scale).add(noiseData.offset);
+        let perlinValue = noise(coord.x, coord.y, coord.z);
+
+        return perlinValue;
+    }
+
+    public generate3DFBM(position: Vector3, noiseData: NoiseData, offset: Vector3): number {
+        let noise = this.noise[this.noiseType]["3D"];
 
         let maxPossibleHeight = 0;
         let amplitude = 1;
