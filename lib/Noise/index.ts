@@ -1,6 +1,7 @@
 import { seed, perlin2, perlin3 } from "perlin.js"
 import { createNoise3D, createNoise2D } from "simplex-noise";
 import { Vector3 } from "three";
+import alea from "alea";
 
 export interface NoiseData {
     offset: Vector3;
@@ -34,7 +35,13 @@ export class Noise {
     private noiseType =  "perlin";
 
     constructor(_seed: number) {
-        this.seed = Noise.createSeed(_seed);
+        let seedIn = _seed;
+        
+        let simplexSeed = alea(seedIn);
+        this.noise.simplex["3D"] = createNoise3D(simplexSeed);
+        this.noise.simplex["2D"] = createNoise2D(simplexSeed);
+
+        this.seed = seed(seedIn);
     }
 
     public static createSeed(_seed: number) {
