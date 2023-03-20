@@ -13,6 +13,9 @@
     "@types/three": "^0.144.0",
     "alea": "^1.0.1",
     "perlin.js": "^1.0.0",
+    "prng": "^0.0.1",
+    "random": "^4.1.0",
+    "seedrandom": "^3.0.5",
     "simplex-noise": "^4.0.1",
     "three": "^0.145.0"
   },

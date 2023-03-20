@@ -1,5 +1,5 @@
 import Cube, { MeshData } from "./Cube"
-import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial, BoxGeometry, Raycaster } from "three"
+import { Vector3, Vector4, BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial, BoxGeometry, Raycaster, Intersection } from "three"
 import { createNoise3D, createNoise2D } from "simplex-noise";
 import alea from "alea";
 
@@ -484,17 +484,30 @@ export class VolumeNew {
         return this.densityThreshold;
     }
 
-    public getHeightmap(): Vector3[] {
-        const heightMap = [] as Vector3[];
+    public getHeightmap(scale = 1): {point: Vector3, normal: Vector3}[] {
+        const heightMap = [] as {point: Vector3, normal: Vector3}[];
         const heightMapper = new Raycaster();
         const mesh = new Mesh(this.geometry, new MeshBasicMaterial({color: 0x000000}));
-        for(let x = Number(this.showEdges); x < this.size-Number(this.showEdges); x++) {
-            for(let z = Number(this.showEdges); z < this.size-Number(this.showEdges); z++) {
+
+        // Calculate the size based on the scale
+        // Where 1 is the size of the volume
+        // Where 2 is half the size of the volume
+
+        
+        for(let x = Number(this.showEdges); x < this.size-Number(this.showEdges); x+=scale) {
+            for(let z = Number(this.showEdges); z < this.size-Number(this.showEdges); z+=scale) {
                 const point = new Vector3(x, this.size * 2,z);
                 heightMapper.set(point, new Vector3(0,-1,0));
                 const intersects = heightMapper.intersectObject(mesh);
-                if(intersects.length === 0) heightMap.push(new Vector3(x,0,z));
-                else heightMap.push(intersects[0].point.clone());
+                if(intersects.length === 0) {
+                    continue;
+                }
+                else {
+                    heightMap.push({
+                        point: intersects[0].point,
+                        normal: intersects[0].face?.normal.clone().normalize() || new Vector3(0,1,0)
+                    });
+                }
             }
         }
 

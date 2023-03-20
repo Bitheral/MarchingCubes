@@ -1,7 +1,6 @@
 import { seed, perlin2, perlin3 } from "perlin.js"
 import { createNoise3D, createNoise2D } from "simplex-noise";
 import { Vector3 } from "three";
-import alea from "alea";
 
 export interface NoiseData {
     offset: Vector3;
@@ -19,6 +18,7 @@ export const NoiseData = {
     lacunarity: 1,
 };
 
+
 export class Noise {
     public noise: any = {
         perlin: {
@@ -35,17 +35,16 @@ export class Noise {
     private noiseType =  "perlin";
 
     constructor(_seed: number) {
-        let seedIn = _seed;
-        
-        let simplexSeed = alea(seedIn);
-        this.noise.simplex["3D"] = createNoise3D(simplexSeed);
-        this.noise.simplex["2D"] = createNoise2D(simplexSeed);
-
-        this.seed = seed(seedIn);
+        this.seed = _seed;
     }
 
-    public static createSeed(_seed: number) {
-        return seed(_seed);
+    public static createSeed(_seed = 1) {
+        // If the seed is 0, or more than 65536, then get the modulus of the seed
+        while(_seed === 0 || _seed > 65536) {
+            _seed = _seed % 65536;
+        }
+
+        seed(_seed);
     }
 
     public setType(type: string) {
@@ -63,6 +62,7 @@ export class Noise {
     }
 
     public generate3D(position: Vector3, noiseData: NoiseData): number {
+        Noise.createSeed(this.seed * (position.x + position.y + position.z));
         let noise = this.noise[this.noiseType]["3D"];
 
         if(noiseData.scale <= 0) {
