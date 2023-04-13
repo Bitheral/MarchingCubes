@@ -1,8 +1,8 @@
 # A Marching Cubes algorithm package for Three.js
 
 ![Version](https://img.shields.io/npm/v/@bitheral/marching-cubes?label=Version&style=for-the-badge)
-![License](https://img.shields.io/npm/l/@bitheral/marching-cubes?style=for-the-badge)
-![Dependencies](https://img.shields.io/librariesio/release/npm/@bitheral/marching-cubes/1.4.5?style=for-the-badge)
+[![License](https://img.shields.io/npm/l/@bitheral/marching-cubes?style=for-the-badge)](https://github.com/Bitheral/MarchingCubes/blob/main/LICENSE.md)
+[![Dependencies](https://img.shields.io/librariesio/release/npm/@bitheral/marching-cubes/1.4.5?style=for-the-badge)](https://www.npmjs.com/package/@bitheral/marching-cubes?activeTab=dependencies)
 ![Size](https://img.shields.io/bundlephobia/min/@bitheral/marching-cubes?label=Bundle%20Size&style=for-the-badge)
 
 This package is in part a port of Paul Bourke's [marching cubes algorithm](http://paulbourke.net/geometry/polygonise/), to help create an environment using the [Three.js](http://threejs.org/) library.
