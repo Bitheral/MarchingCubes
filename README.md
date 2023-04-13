@@ -9,8 +9,6 @@ This package is in part a port of Paul Bourke's [marching cubes algorithm](http:
 
 This package was developed in concurrence with [my dissertation project](https://github.com/Bitheral/webgl-procedural-environment), which is a procedural environment generator using WebGL. It is **recommended** to check out the project for a more complete example.
 
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=bitheral&repo=webgl-procedural-environment&theme=transparent&show_owner=true)](https://github.com/bitheral/webgl-procedural-environment)
-
 ## Installation
 
 ```bash
